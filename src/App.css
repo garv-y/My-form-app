@@ -1,0 +1,12 @@
+/* Likely applied to the root React container */
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+/* Might affect Bootstrap card spacing if not overridden */
+.card {
+  padding: 2em;
+}

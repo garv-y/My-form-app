@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --dark-bg: #111827;
+  --dark-card-bg: #1e1e1e;
+  --dark-input-bg: #2a2a2a;
+  --dark-border: #444;
+  --dark-text: #ffffff;
+}
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
+
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.light-mode {
+  background-color: #f3f4f6;
+  color: #000000;
+}
+
+
+body.dark-mode {
+  background-color: var(--dark-bg);
+  color: var(--dark-text);
+}
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h5,
+body.dark-mode p,
+body.dark-mode label {
+  color: var(--dark-text);
+}
+
+body.dark-mode .card {
+  background-color: var(--dark-card-bg);
+  border-color: var(--dark-border);
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select,
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  background-color: var(--dark-input-bg);
+  color: var(--dark-text);
+  border-color: var(--dark-border);
+}
+
+body.dark-mode .btn-outline-light {
+  color: var(--dark-text);
+  border-color: var(--dark-text);
+}
+
+body.dark-mode .btn-outline-light:hover {
+  background-color: var(--dark-text);
+  color: #000;
+}
+
+
+.bg-dark-soft {
+  background-color: #1a1a1a !important;
+  color: #f3f4f6 !important;
+  border-color: var(--dark-border) !important;
+}
+
+.bg-dark-subtle {
+  background-color: #2e2e2e !important;
+}
+
+
+.non-draggable {
+  user-select: text;
+  pointer-events: auto;
+}
+
+.drag-handle {
+  cursor: move;
+  user-select: none;
+}
+
+.card {
+  @apply bg-white dark:bg-neutral-800 rounded-lg shadow-md;
+}
+
+.layout {
+  @apply w-full min-w-[500px] flex flex-wrap gap-4 p-2 box-border;
+}
+
+.resizer {
+  width: 6px;
+  cursor: col-resize;
+  background: #ccc;
+  z-index: 10;
+}
+
+.resizer:hover {
+  background: #999;
+} 
