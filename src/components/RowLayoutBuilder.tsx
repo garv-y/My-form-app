@@ -9,6 +9,7 @@ interface Props {
   deleteField: (id: string) => void;
 }
 
+// Define allowed field types that can be added in columns
 const FIELD_TYPES = [
   "text",
   "number",
@@ -22,6 +23,7 @@ const FIELD_TYPES = [
   "tags",
 ];
 
+// Helper function to parse layout string like "1/2 + 1/2" into array
 const parseLayout = (layout: string): string[] => {
   return layout
     .split("+")
@@ -29,6 +31,7 @@ const parseLayout = (layout: string): string[] => {
     .filter((part) => part !== "");
 };
 
+// Convert fraction like "1/2" to percentage (e.g. 50)
 const getFractionAsPercent = (fraction: string): number => {
   const [numerator, denominator] = fraction.split("/").map(Number);
   if (!numerator || !denominator) return 100;
@@ -41,14 +44,18 @@ const RowLayoutBuilder: React.FC<Props> = ({
   deleteField,
 }) => {
   const { theme } = useTheme();
+
+  // Layout input value for the layout string ("1/2 + 1/2")
   const [layoutInput, setLayoutInput] = useState(
     field.columns.map((col) => col.width ?? "1/2").join(" + ")
   );
 
+  // Store selected field types for each column before adding
   const [selectedFieldTypes, setSelectedFieldTypes] = useState<string[]>(
     field.columns.map(() => "text")
   );
 
+  // Apply layout changes from the layoutInput
   const handleUpdateLayout = () => {
     const widths = parseLayout(layoutInput);
     if (widths.length === 0) return;
@@ -63,9 +70,11 @@ const RowLayoutBuilder: React.FC<Props> = ({
       columns: newColumns,
     });
 
+    // Reset field types after layout change
     setSelectedFieldTypes(widths.map(() => "text"));
   };
 
+  // Update a field inside a specific column
   const updateNestedField = (columnIndex: number, updated: Field) => {
     const updatedColumns = [...field.columns];
     updatedColumns[columnIndex].fields = updatedColumns[columnIndex].fields.map(
@@ -74,6 +83,7 @@ const RowLayoutBuilder: React.FC<Props> = ({
     updateField({ ...field, columns: updatedColumns });
   };
 
+  // Delete a field from a column
   const deleteNestedField = (columnIndex: number, fieldId: string) => {
     const updatedColumns = [...field.columns];
     updatedColumns[columnIndex].fields = updatedColumns[
@@ -82,6 +92,7 @@ const RowLayoutBuilder: React.FC<Props> = ({
     updateField({ ...field, columns: updatedColumns });
   };
 
+  // Add new field to a column
   const addFieldToColumn = (columnIndex: number) => {
     const selectedType = selectedFieldTypes[columnIndex] || "text";
 
@@ -114,7 +125,7 @@ const RowLayoutBuilder: React.FC<Props> = ({
           : "bg-white text-gray-800 border-gray-300"
       }`}
     >
-      {/* Layout Input */}
+      {/* Input for Layout String */}
       <div className="mb-4">
         <label className="block text-sm font-medium mb-1">
           Layout (e.g., 1/2 + 1/2):
@@ -137,7 +148,7 @@ const RowLayoutBuilder: React.FC<Props> = ({
         </button>
       </div>
 
-      {/* Column Layout */}
+      {/* Render Columns Horizontally */}
       <div className="flex gap-2 w-full overflow-x-auto">
         {field.columns.map((column, colIndex) => {
           const widthPercent = getFractionAsPercent(column.width ?? "1/2");
@@ -155,11 +166,12 @@ const RowLayoutBuilder: React.FC<Props> = ({
                 borderColor: theme === "dark" ? "#444" : "#ccc",
               }}
             >
+              {/* Column Title */}
               <h4 className="text-sm font-semibold mb-2">
                 Column {colIndex + 1}
               </h4>
 
-              {/* Field type selector + Add button */}
+              {/* Field Type Selector + Add Button */}
               <div className="flex items-center gap-2 mb-2">
                 <select
                   value={selectedFieldTypes[colIndex]}
@@ -184,7 +196,7 @@ const RowLayoutBuilder: React.FC<Props> = ({
                 </button>
               </div>
 
-              {/* Render Fields in Column */}
+              {/* Render Fields in Each Column */}
               <div className="space-y-3">
                 {column.fields.map((f) => (
                   <FieldBuilder
@@ -202,7 +214,7 @@ const RowLayoutBuilder: React.FC<Props> = ({
         })}
       </div>
 
-      {/* Delete Section Button */}
+      {/* Delete the Entire Section */}
       <div className="mt-4 flex justify-end">
         <button
           onClick={() => deleteField(field.id)}

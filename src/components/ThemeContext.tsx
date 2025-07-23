@@ -1,33 +1,34 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-// Define the shape of the theme context
+// ✅ Define the shape of the context: theme value + toggle function
 interface ThemeContextType {
   theme: "light" | "dark";
   toggleTheme: () => void;
 }
 
-// Create the ThemeContext with default values
+// ✅ Create the ThemeContext with default (light mode)
 const ThemeContext = createContext<ThemeContextType>({
   theme: "light",
   toggleTheme: () => {},
 });
 
-// ThemeProvider component
+// ✅ ThemeProvider wraps the app and provides theme context
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  // Initialize theme from localStorage or fallback to "light"
   const [theme, setTheme] = useState<"light" | "dark">(
     localStorage.getItem("theme") === "dark" ? "dark" : "light"
   );
 
-  // Toggle theme function
+  // ✅ Toggle function switches theme and saves to localStorage
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
     localStorage.setItem("theme", newTheme);
   };
 
-  // Apply Tailwind classes to body
+  // ✅ Effect applies Tailwind dark class to root html element
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "dark") {
@@ -37,6 +38,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [theme]);
 
+  // ✅ Provide theme and toggleTheme to all children
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
@@ -44,5 +46,5 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-// Custom hook to use theme
+// ✅ Custom hook for consuming theme context
 export const useTheme = () => useContext(ThemeContext);

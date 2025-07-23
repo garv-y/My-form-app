@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTheme } from "./ThemeContext";
 import RecentFormCard from "./RecentFormCard";
 
+// Interfaces for type safety
 interface RecentForm {
   id: number;
   title: string;
@@ -27,14 +28,16 @@ interface SubmittedTemplate {
 }
 
 const Dashboard: React.FC = () => {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme(); // Light/Dark mode toggle
 
+  // State to store forms/templates/submissions
   const [recentForms, setRecentForms] = useState<RecentForm[]>([]);
   const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([]);
   const [submittedTemplates, setSubmittedTemplates] = useState<
     SubmittedTemplate[]
   >([]);
 
+  // Load data from localStorage on initial mount
   useEffect(() => {
     const forms = (
       JSON.parse(localStorage.getItem("recentForms") || "[]") as any[]
@@ -52,6 +55,7 @@ const Dashboard: React.FC = () => {
     );
   }, []);
 
+  // Soft-delete a recent form (mark as deleted in localStorage)
   const softDeleteForm = (id: number) => {
     const forms = (
       JSON.parse(localStorage.getItem("recentForms") || "[]") as any[]
@@ -63,6 +67,7 @@ const Dashboard: React.FC = () => {
     setRecentForms(updated.filter((f) => !f.isDeleted));
   };
 
+  // Soft-delete a saved template
   const softDeleteTemplate = (id: string) => {
     const templates = JSON.parse(localStorage.getItem("templates") || "[]");
     const updated = templates.map((t: SavedTemplate) =>
@@ -72,6 +77,7 @@ const Dashboard: React.FC = () => {
     setSavedTemplates(updated.filter((t: SavedTemplate) => !t.isDeleted));
   };
 
+  // Soft-delete a submitted form
   const softDeleteSubmission = (id: string) => {
     const submissions = JSON.parse(
       localStorage.getItem("submittedTemplates") || "[]"
@@ -85,6 +91,7 @@ const Dashboard: React.FC = () => {
     );
   };
 
+  // Preset default templates shown at the top
   const defaultTemplates = [
     { id: "feedback", name: "Feedback Form" },
     { id: "registration", name: "Registration Form" },
@@ -97,6 +104,7 @@ const Dashboard: React.FC = () => {
         theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
       }`}
     >
+      {/* Top Navigation Bar */}
       <nav
         className={`flex justify-between items-center px-4 py-3 shadow ${
           theme === "dark" ? "bg-gray-800" : "bg-white"
@@ -104,11 +112,14 @@ const Dashboard: React.FC = () => {
       >
         <span className="text-2xl p-3 font-bold">Forms Dashboard</span>
         <div className="flex gap-2">
+          {/* Link to form builder */}
           <Link to="/form-builder">
             <button className="border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white px-3 py-1 rounded">
               + Blank Form
             </button>
           </Link>
+
+          {/* Theme toggle button */}
           <button
             className={`border px-3 py-1 rounded ${
               theme === "light"
@@ -119,6 +130,8 @@ const Dashboard: React.FC = () => {
           >
             Switch to {theme === "light" ? "Dark" : "Light"} Mode
           </button>
+
+          {/* Link to trash */}
           <Link to="/trash">
             <button className="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded">
               View Trash
@@ -127,6 +140,7 @@ const Dashboard: React.FC = () => {
         </div>
       </nav>
 
+      {/* Template Cards */}
       <h4 className="text-lg font-semibold mt-3 p-6">Start with a Template</h4>
       <div className="grid grid-cols-1 md:grid-cols-3 p-4 gap-4 px-4">
         {defaultTemplates.map((template) => (
@@ -156,6 +170,7 @@ const Dashboard: React.FC = () => {
         ))}
       </div>
 
+      {/* Saved Templates Section */}
       {savedTemplates.length > 0 && (
         <>
           <h4 className="text-lg font-semibold mt-10 mb-4 px-4">
@@ -194,6 +209,7 @@ const Dashboard: React.FC = () => {
         </>
       )}
 
+      {/* Submitted Templates Section */}
       {submittedTemplates.length > 0 && (
         <>
           <h4 className="text-lg font-semibold mt-10 mb-4 px-4">
@@ -235,6 +251,7 @@ const Dashboard: React.FC = () => {
         </>
       )}
 
+      {/* Recent Forms Section */}
       <hr className="my-10 border-gray-400" />
       <h4 className="text-lg font-semibold px-6 py-2">Recent Forms</h4>
       {recentForms.length === 0 ? (

@@ -12,52 +12,51 @@ export type FieldType =
   | "multipleChoice"   // Single selection (radio buttons)
   | "tags"             // Tag input (select or create multiple values)
   | "date"             // Date picker
-  | "rowLayout";       // NEW: Custom row layout container
+  | "rowLayout";       // Custom layout that holds multiple columns and fields
 
-// Represents a single option in dropdowns, checkboxes, or multipleChoice
+// Represents a single option in dropdowns, checkboxes, or multipleChoice fields
 export interface FieldOption {
   label: string; // Text shown to the user
-  value: string; // Internal value submitted
+  value: string; // Value stored in form data
 }
 
-// Layout type for react-grid-layout (optional if using)
+// Layout item structure (used optionally if working with react-grid-layout)
 export interface LayoutItem {
-  i: string;         // ID of the field
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  static?: boolean;
+  i: string;     // Unique ID for the layout item
+  x: number;     // Horizontal position in grid
+  y: number;     // Vertical position in grid
+  w: number;     // Width (in columns)
+  h: number;     // Height (in rows)
+  static?: boolean; // If true, the item is not draggable/resizable
 }
 
-// Base field interface used by all field types
+// Common base shared by all fields (used to avoid duplication)
 export interface FieldBase {
-  id: string;
-  type: FieldType;
-  label?: string;
-  required?: boolean;
-  displayOnShortForm?: boolean;
-  x?: number;
-  y?: number;
-  w?: number;
-  h?: number;
-  options?: FieldOption[]; // Only used for choice-based fields
+  id: string;                     // Unique identifier
+  type: FieldType;                // Type of field (from FieldType)
+  label?: string;                 // Display label
+  required?: boolean;             // Whether field is required
+  displayOnShortForm?: boolean;  // If this should show in short/preview form
+  x?: number;                    // Optional X coord in grid
+  y?: number;                    // Optional Y coord in grid
+  w?: number;                    // Optional width in grid
+  h?: number;                    // Optional height in grid
+  options?: FieldOption[];       // Used only in fields with selectable options
 }
 
-// Special structure for 'rowLayout' fields
+// Special structure for fields of type 'rowLayout'
+// These contain multiple columns with their own nested fields
 export interface RowLayoutField extends FieldBase {
-  type: "rowLayout";
-  layout: string[]; // Example: ['1/3', '1/3', '1/3']
+  type: "rowLayout";             // Force type to be 'rowLayout'
+  layout: string[];              // Column widths like ['1/2', '1/2']
   columns: {
-    width?: string; // Optional width for the column
-    fields: Field[]; // Nested fields per column
+    width?: string;              // Optional column width (used in layout)
+    fields: Field[];             // Nested fields inside this column
   }[];
-  
 }
 
-// Union type for all valid fields (RowLayout OR Normal Field)
+// A field can be either a simple field (FieldBase) or a rowLayout field
 export type Field = RowLayoutField | FieldBase;
 
-// FieldConfig is identical to Field during creation
+// Alias to be used during field configuration/editing
 export type FieldConfig = Field;
-

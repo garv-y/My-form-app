@@ -4,6 +4,7 @@ import { useTheme } from "./ThemeContext";
 import { exportAsCSV, exportAsXLSX, exportAsPDF } from "../utils/exportUtils";
 import { saveAs } from "file-saver";
 
+// Define the structure of a submitted template
 interface SubmittedTemplate {
   id: string;
   title: string;
@@ -13,12 +14,13 @@ interface SubmittedTemplate {
 }
 
 const TemplateView: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { theme } = useTheme();
+  const { id } = useParams<{ id: string }>(); // Get template ID from URL
+  const navigate = useNavigate(); // Navigate programmatically
+  const { theme } = useTheme(); // Access theme context
 
-  const [form, setForm] = useState<SubmittedTemplate | null>(null);
+  const [form, setForm] = useState<SubmittedTemplate | null>(null); // Store the matched submitted template
 
+  // Fetch the template from localStorage based on ID
   useEffect(() => {
     const saved = JSON.parse(
       localStorage.getItem("submittedTemplates") || "[]"
@@ -27,6 +29,7 @@ const TemplateView: React.FC = () => {
     setForm(match || null);
   }, [id]);
 
+  // Theme-specific classes
   const isDark = theme === "dark";
   const baseBg = isDark ? "bg-gray-900 text-white" : "bg-white text-black";
   const panelBg = isDark ? "bg-gray-800 text-white" : "bg-gray-100 text-black";
@@ -34,6 +37,7 @@ const TemplateView: React.FC = () => {
     ? "border border-white text-white hover:bg-white hover:text-black"
     : "border border-black text-black hover:bg-black hover:text-white";
 
+  // Download template as JSON
   const handleJSONDownload = () => {
     if (!form) return;
     const blob = new Blob([JSON.stringify(form, null, 2)], {
@@ -42,6 +46,7 @@ const TemplateView: React.FC = () => {
     saveAs(blob, `${form.title}.json`);
   };
 
+  // If template is not found, show fallback UI
   if (!form) {
     return (
       <div className={`min-h-screen py-10 px-6 ${baseBg}`}>
@@ -58,9 +63,11 @@ const TemplateView: React.FC = () => {
 
   return (
     <div className={`min-h-screen pb-28 px-6 py-10 ${baseBg}`}>
-      {/* ✅ Top Title and Download Buttons */}
+      {/* ✅ Title and Download Buttons */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h2 className="text-2xl font-semibold">{form.title}</h2>
+
+        {/* 📥 Export Buttons */}
         <div className="flex flex-wrap gap-2">
           <button
             className="border px-3 py-2 rounded text-blue-600 border-blue-600 hover:bg-blue-100"
@@ -95,7 +102,7 @@ const TemplateView: React.FC = () => {
         </div>
       </div>
 
-      {/* Submission Time */}
+      {/* 🕓 Submission Time */}
       <p className="mb-4">
         <span className="font-semibold">Submission Time:</span>{" "}
         {form.submittedAt
@@ -103,14 +110,16 @@ const TemplateView: React.FC = () => {
           : "Unknown"}
       </p>
 
-      {/* Submitted Data */}
+      {/* 📄 Submitted Data Display */}
       <div>
         <h5 className="text-lg font-medium mb-2">Submitted Data:</h5>
         <div
           className={`p-4 rounded-md ${panelBg}`}
           style={{ whiteSpace: "pre-wrap" }}
         >
+          {/* 🔁 Loop over submitted responses */}
           {Object.entries(form.responses).map(([id, value]) => {
+            // Find the matching field label
             const field = form.fields.find((f) => String(f.id) === String(id));
             const label = field?.label || field?.title || `Field ${id}`;
             return (

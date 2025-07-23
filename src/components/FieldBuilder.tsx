@@ -2,67 +2,79 @@ import React from "react";
 import type { Field, RowLayoutField } from "../types/types";
 import { useTheme } from "./ThemeContext";
 
+// Props for the FieldBuilder component
 interface Props {
-  field: Field;
-  updateField: (updated: Field) => void;
-  deleteField: (id: string) => void;
+  field: Field; // Current field data
+  updateField: (updated: Field) => void; // Callback to update field
+  deleteField: (id: string) => void; // Callback to delete field by ID
 }
 
+// FieldBuilder is responsible for editing field configuration
 const FieldBuilder: React.FC<Props> = ({ field, updateField, deleteField }) => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
+  // Common input styles based on theme
   const inputClass = `w-full px-3 py-2 rounded border focus:outline-none ${
     isDark
       ? "bg-gray-800 text-white border-gray-600"
       : "bg-white text-black border-gray-300"
   }`;
 
+  // Handle label input changes
   const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     updateField({ ...field, label: e.target.value });
 
+  // Toggle required field
   const handleRequiredChange = () =>
     updateField({ ...field, required: !field.required });
 
+  // Update option label/value by index
   const handleOptionChange = (index: number, value: string) => {
     const options = [...(field.options || [])];
     options[index] = { label: value, value };
     updateField({ ...field, options });
   };
 
+  // Add a new option
   const addOption = () =>
     updateField({
       ...field,
       options: [...(field.options || []), { label: "Option", value: "Option" }],
     });
 
+  // Delete an option by index
   const deleteOption = (index: number) => {
     const options = field.options?.filter((_, i) => i !== index);
     updateField({ ...field, options });
   };
 
-  // === ROW LAYOUT ===
+  // === SPECIAL CASE: ROW LAYOUT FIELD ===
   if (field.type === "rowLayout") {
     const rowField = field as RowLayoutField;
 
+    // Update a column's width
     const handleColumnChange = (index: number, width: string) => {
       const newLayout = [...rowField.layout];
       newLayout[index] = width;
       updateField({ ...rowField, layout: newLayout });
     };
 
+    // Add a new column
     const addColumn = () => {
       const newLayout = [...rowField.layout, "1/2"];
       const newColumns = [...rowField.columns, { fields: [] }];
       updateField({ ...rowField, layout: newLayout, columns: newColumns });
     };
 
+    // Remove a column
     const removeColumn = (index: number) => {
       const newLayout = rowField.layout.filter((_, i) => i !== index);
       const newColumns = rowField.columns.filter((_, i) => i !== index);
       updateField({ ...rowField, layout: newLayout, columns: newColumns });
     };
 
+    // Add new nested field inside a column
     const addFieldToColumn = (columnIndex: number) => {
       const newField: Field = {
         id: Date.now().toString(),
@@ -81,6 +93,7 @@ const FieldBuilder: React.FC<Props> = ({ field, updateField, deleteField }) => {
       updateField({ ...rowField, columns: newColumns });
     };
 
+    // Update a nested field inside a column
     const updateNestedField = (columnIndex: number, updatedField: Field) => {
       const newColumns = [...rowField.columns];
       const fieldIndex = newColumns[columnIndex].fields.findIndex(
@@ -90,6 +103,7 @@ const FieldBuilder: React.FC<Props> = ({ field, updateField, deleteField }) => {
       updateField({ ...rowField, columns: newColumns });
     };
 
+    // Delete a nested field inside a column
     const deleteNestedField = (columnIndex: number, fieldId: string) => {
       const newColumns = [...rowField.columns];
       newColumns[columnIndex].fields = newColumns[columnIndex].fields.filter(
@@ -98,6 +112,7 @@ const FieldBuilder: React.FC<Props> = ({ field, updateField, deleteField }) => {
       updateField({ ...rowField, columns: newColumns });
     };
 
+    // === RENDER ROW LAYOUT FIELD ===
     return (
       <div
         className={`rounded-lg p-4 mb-4 shadow-md ${
@@ -114,6 +129,7 @@ const FieldBuilder: React.FC<Props> = ({ field, updateField, deleteField }) => {
 
         {rowField.layout.map((col, idx) => (
           <div key={idx} className="mb-4">
+            {/* Column width input */}
             <div className="flex items-center gap-2 mb-1">
               <input
                 className={inputClass}
@@ -133,6 +149,7 @@ const FieldBuilder: React.FC<Props> = ({ field, updateField, deleteField }) => {
               Use fraction (e.g. 1/2, 1/3) or percentage (e.g. 50%)
             </p>
 
+            {/* Nested field list inside column */}
             <div
               className={`border rounded-lg p-4 space-y-3 ${
                 isDark
@@ -174,6 +191,7 @@ const FieldBuilder: React.FC<Props> = ({ field, updateField, deleteField }) => {
           </div>
         ))}
 
+        {/* Row layout controls */}
         <div className="mt-4 flex gap-3">
           <button
             type="button"
@@ -195,7 +213,7 @@ const FieldBuilder: React.FC<Props> = ({ field, updateField, deleteField }) => {
     );
   }
 
-  // === NON-ROW FIELDS ===
+  // === RENDER STANDARD FIELDS ===
   return (
     <div
       className={`rounded-lg p-4 mb-4 shadow-md ${
@@ -204,6 +222,7 @@ const FieldBuilder: React.FC<Props> = ({ field, updateField, deleteField }) => {
           : "bg-white text-black border border-gray-200"
       }`}
     >
+      {/* Label input */}
       <label className="block mb-2 font-medium">Field Label</label>
       <input
         className={`${inputClass} mb-3`}
@@ -212,6 +231,7 @@ const FieldBuilder: React.FC<Props> = ({ field, updateField, deleteField }) => {
         placeholder="Enter field label"
       />
 
+      {/* Required + Short Form checkboxes */}
       <div className="flex flex-col gap-2 mb-3">
         <label
           htmlFor={`required-${field.id}`}
@@ -247,6 +267,7 @@ const FieldBuilder: React.FC<Props> = ({ field, updateField, deleteField }) => {
         </label>
       </div>
 
+      {/* Render options editor for multi-choice field types */}
       {[
         "tags",
         "checkbox",
@@ -284,6 +305,7 @@ const FieldBuilder: React.FC<Props> = ({ field, updateField, deleteField }) => {
         </div>
       )}
 
+      {/* Delete entire field */}
       <button
         type="button"
         className="mt-4 px-3 py-1 text-red-600 border border-red-600 rounded text-sm hover:bg-red-600 hover:text-white transition"

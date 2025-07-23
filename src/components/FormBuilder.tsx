@@ -1,15 +1,27 @@
+// Core React hooks and dependencies
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+
+// Grid layout library for draggable/resizable fields
 import GridLayout from "react-grid-layout";
+
+// Custom field and layout components
 import FieldBuilder from "./FieldBuilder";
 import FieldRenderer from "./FieldRenderer";
-import { useTheme } from "./ThemeContext";
-import type { FieldConfig, FieldType, RowLayoutField } from "../types/types";
 import RowLayoutBuilder from "./RowLayoutBuilder";
 import RowLayoutRenderer from "./RowLayoutRenderer";
+
+// Theme context for light/dark mode
+import { useTheme } from "./ThemeContext";
+
+// Type definitions
+import type { FieldConfig, FieldType, RowLayoutField } from "../types/types";
+
+// Grid layout styles
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
+// Default heights for each field type
 const defaultHeightMap: Record<FieldType, number> = {
   header: 7,
   label: 7,
@@ -25,6 +37,7 @@ const defaultHeightMap: Record<FieldType, number> = {
   rowLayout: 18,
 };
 
+// Type definition for a layout item in react-grid-layout
 type LayoutItem = {
   i: string;
   x: number;
@@ -34,28 +47,32 @@ type LayoutItem = {
   static?: boolean;
 };
 
-// const extractResponses = (field: FieldConfig, data: Record<string, any>): any =>
-//   data[field.id] ?? "";
-
 const FormBuilder: React.FC = () => {
+  // Theme and routing
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+
+  // Container ref for dynamic resizing
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Main state variables
   const [containerWidth, setContainerWidth] = useState(1000);
   const [formTitle, setFormTitle] = useState("My Custom Form");
   const [fields, setFields] = useState<FieldConfig[]>([]);
-  const [formSubmitted, setFormSubmitted] = useState(false);
   const [layout, setLayout] = useState<LayoutItem[]>([]);
   const [formResponses, setFormResponses] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, boolean>>({});
+  const [formSubmitted, setFormSubmitted] = useState(false);
   const [, setSubmittedData] = useState<Record<string, any> | null>(null);
   const [useShortForm, setUseShortForm] = useState(false);
 
+  // Theme class toggling (light or dark)
   useEffect(() => {
     document.body.classList.remove("light-mode", "dark-mode");
     document.body.classList.add(`${theme}-mode`);
   }, [theme]);
 
+  // Adjust container width dynamically on resize
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
@@ -67,10 +84,10 @@ const FormBuilder: React.FC = () => {
     return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
+  // Add new field to the form
   const addField = (type: FieldType) => {
     const id = Date.now().toString();
 
-    // Special config for rowLayout
     const newField: FieldConfig =
       type === "rowLayout"
         ? {
@@ -79,7 +96,7 @@ const FormBuilder: React.FC = () => {
             label: "Row Layout",
             required: false,
             displayOnShortForm: false,
-            layout: ["1/2", "1/2"], // default two-column layout
+            layout: ["1/2", "1/2"],
             columns: [{ fields: [] }, { fields: [] }],
           }
         : {
@@ -115,24 +132,29 @@ const FormBuilder: React.FC = () => {
     setLayout((prev) => [...prev, baseLayout]);
   };
 
+  // Update an individual field
   const updateField = (updatedField: FieldConfig) => {
     setFields((prevFields) =>
       prevFields.map((f) => (f.id === updatedField.id ? updatedField : f))
     );
   };
 
+  // Remove a field by its ID
   const removeField = (id: string) => {
     setFields((prev) => prev.filter((f) => f.id !== id));
     setLayout((prev) => prev.filter((l) => l.i !== id));
   };
 
+  // Left panel width and drag state
   const [leftWidth, setLeftWidth] = useState(50);
   const isDragging = useRef(false);
 
+  // Start divider drag
   const startDragging = () => {
     isDragging.current = true;
   };
 
+  // Handle mouse move and adjust left panel width
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging.current || !containerRef.current) return;
@@ -158,6 +180,7 @@ const FormBuilder: React.FC = () => {
     };
   }, []);
 
+  // Extract and normalize responses from fields
   const extractResponses = (
     field: FieldConfig,
     responses: Record<string, any>
@@ -182,6 +205,7 @@ const FormBuilder: React.FC = () => {
     };
   };
 
+  // Handle form submit logic and validation
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: Record<string, boolean> = {};
@@ -200,7 +224,6 @@ const FormBuilder: React.FC = () => {
         }
 
         if (field.type === "rowLayout" && "columns" in field) {
-          // Flatten rowLayout fields into main result
           Object.entries(value).forEach(([key, val]) => {
             result[key] = val;
           });
@@ -239,7 +262,7 @@ const FormBuilder: React.FC = () => {
   return (
     <div className="flex w-full">
       <div className="flex-grow w-full" ref={containerRef}>
-        {/* Header */}
+        {/* Top Header Bar */}
         <div
           className={`flex justify-between items-center mb-4 px-4 py-4 shadow-sm w-full ${
             theme === "dark"
@@ -248,7 +271,6 @@ const FormBuilder: React.FC = () => {
           }`}
         >
           <h3 className="text-2xl p-3 font-bold">Form Builder</h3>
-
           <div className="flex flex-col md:flex-row items-end md:items-center gap-2">
             <button
               className={`border px-4 py-2 rounded ${
@@ -274,7 +296,7 @@ const FormBuilder: React.FC = () => {
         </div>
 
         <div className="flex w-full h-full relative">
-          {/* Left Panel */}
+          {/* Left Panel – Builder */}
           <div
             style={{
               width: `${leftWidth}%`,
@@ -284,6 +306,7 @@ const FormBuilder: React.FC = () => {
             }}
           >
             <div>
+              {/* Add Field Buttons */}
               <div className="px-4 mb-4">
                 <div className="flex flex-wrap gap-2">
                   {[
@@ -315,6 +338,7 @@ const FormBuilder: React.FC = () => {
                 </div>
               </div>
 
+              {/* Form Title Input */}
               <div className="mb-4 px-4">
                 <label className="block font-medium mb-1">Form Title</label>
                 <input
@@ -325,6 +349,7 @@ const FormBuilder: React.FC = () => {
                 />
               </div>
 
+              {/* Field Editor Grid */}
               <GridLayout
                 className="layout mb-5 px-3"
                 layout={layout}
@@ -380,13 +405,13 @@ const FormBuilder: React.FC = () => {
             </div>
           </div>
 
-          {/* Divider */}
+          {/* Drag Divider */}
           <div
             onMouseDown={startDragging}
             className="w-1 cursor-col-resize bg-gray-300 z-10"
           />
 
-          {/* Right Panel */}
+          {/* Right Panel – Live Preview */}
           <div
             style={{
               width: `${100 - leftWidth}%`,
@@ -395,6 +420,7 @@ const FormBuilder: React.FC = () => {
             }}
           >
             <div>
+              {/* Toggle Short Form Checkbox */}
               <div className="flex items-center px-6 gap-2 whitespace-nowrap text-left">
                 <input
                   type="checkbox"
@@ -407,6 +433,8 @@ const FormBuilder: React.FC = () => {
                   Show Short Form
                 </label>
               </div>
+
+              {/* Live Preview Form */}
               <div
                 className={`shadow-sm m-4 p-4 rounded form-preview ${
                   theme === "dark"
@@ -488,6 +516,7 @@ const FormBuilder: React.FC = () => {
                             </div>
                           ))}
 
+                        {/* Submit Button */}
                         <div key="submit-button" className="non-draggable mb-5">
                           <button
                             type="submit"
@@ -500,6 +529,8 @@ const FormBuilder: React.FC = () => {
                     );
                   })()}
                 </form>
+
+                {/* Success Message */}
                 <div className="mt-4 flex flex-wrap gap-2">
                   {formSubmitted && (
                     <div className="mt-4 p-3 rounded bg-green-100 text-green-800">

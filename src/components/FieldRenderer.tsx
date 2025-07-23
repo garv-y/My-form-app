@@ -20,6 +20,7 @@ const Renderer: React.FC<FieldRendererProps> = ({
   const isDark = theme === "dark";
   const textColor = isDark ? "text-white" : "text-black";
 
+  // Renders a generic required field error
   const renderError = () =>
     error && (
       <small className="text-red-500 text-sm block mt-1">
@@ -27,10 +28,12 @@ const Renderer: React.FC<FieldRendererProps> = ({
       </small>
     );
 
+  // Shared input styles
   const baseInputClass = `px-3 py-2 rounded border ${
     error ? "border-red-500" : "border-gray-300"
   } ${isDark ? "bg-gray-800 text-white" : "bg-white text-black"}`;
 
+  // Render by field type
   switch (field.type) {
     case "header":
       return (
@@ -91,6 +94,7 @@ const Renderer: React.FC<FieldRendererProps> = ({
             className={baseInputClass}
             value={typeof value === "string" ? value : ""}
             onChange={(e) => onChange?.(e.target.value)}
+            // Date fields limit max date to today
             max={
               field.type === "date"
                 ? new Date().toISOString().split("T")[0]
@@ -189,6 +193,7 @@ const Renderer: React.FC<FieldRendererProps> = ({
       );
 
     case "tags":
+      // Normalize tags value from various sources
       const actualValue =
         value && typeof value === "object" && "value" in value
           ? value.value

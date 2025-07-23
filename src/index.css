@@ -1,38 +1,43 @@
+/* Import Tailwind CSS base styles, components, and utilities */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Define dark theme variables using CSS custom properties */
 :root {
-  --dark-bg: #111827;
-  --dark-card-bg: #1e1e1e;
-  --dark-input-bg: #2a2a2a;
-  --dark-border: #444;
-  --dark-text: #ffffff;
+  --dark-bg: #111827;          /* Dark mode background for body */
+  --dark-card-bg: #1e1e1e;     /* Card background in dark mode */
+  --dark-input-bg: #2a2a2a;    /* Input field background in dark mode */
+  --dark-border: #444;         /* Border color in dark mode */
+  --dark-text: #ffffff;        /* General text color in dark mode */
 }
+
+/* Ensure all form inputs (except checkboxes and radios), selects, and textareas take full width */
 input:not([type="checkbox"]):not([type="radio"]),
 select,
 textarea {
   width: 100%;
-  box-sizing: border-box;
+  box-sizing: border-box; /* Prevent padding from affecting width */
 }
 
-
-
+/* Apply smooth transition when switching between themes */
 body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Light mode body background and text color */
 body.light-mode {
-  background-color: #f3f4f6;
-  color: #000000;
+  background-color: #f3f4f6; /* Light gray */
+  color: #000000;            /* Black text */
 }
 
-
+/* Dark mode body background and text color */
 body.dark-mode {
   background-color: var(--dark-bg);
   color: var(--dark-text);
 }
 
+/* Ensure headings, paragraphs, and labels also switch color in dark mode */
 body.dark-mode h1,
 body.dark-mode h2,
 body.dark-mode h5,
@@ -41,11 +46,13 @@ body.dark-mode label {
   color: var(--dark-text);
 }
 
+/* Style cards in dark mode */
 body.dark-mode .card {
   background-color: var(--dark-card-bg);
   border-color: var(--dark-border);
 }
 
+/* Style form elements in dark mode */
 body.dark-mode .form-control,
 body.dark-mode .form-select,
 body.dark-mode input,
@@ -56,46 +63,53 @@ body.dark-mode textarea {
   border-color: var(--dark-border);
 }
 
+/* Outline light buttons in dark mode */
 body.dark-mode .btn-outline-light {
   color: var(--dark-text);
   border-color: var(--dark-text);
 }
 
+/* Hover effect for light outline button in dark mode */
 body.dark-mode .btn-outline-light:hover {
   background-color: var(--dark-text);
   color: #000;
 }
 
-
+/* Soft dark background utility (used in cards or sections) */
 .bg-dark-soft {
   background-color: #1a1a1a !important;
   color: #f3f4f6 !important;
   border-color: var(--dark-border) !important;
 }
 
+/* Subtle dark background utility */
 .bg-dark-subtle {
   background-color: #2e2e2e !important;
 }
 
-
+/* Make text selectable and clickable inside a normally non-draggable component */
 .non-draggable {
   user-select: text;
   pointer-events: auto;
 }
 
+/* Draggable handle cursor styling */
 .drag-handle {
   cursor: move;
   user-select: none;
 }
 
+/* Card base styling with light and dark mode support using Tailwind utilities */
 .card {
   @apply bg-white dark:bg-neutral-800 rounded-lg shadow-md;
 }
 
+/* Layout wrapper for grid or flex containers (form preview, toolbox, etc.) */
 .layout {
   @apply w-full min-w-[500px] flex flex-wrap gap-4 p-2 box-border;
 }
 
+/* Horizontal resizer for adjustable panel widths */
 .resizer {
   width: 6px;
   cursor: col-resize;
@@ -103,6 +117,7 @@ body.dark-mode .btn-outline-light:hover {
   z-index: 10;
 }
 
+/* Resizer color on hover */
 .resizer:hover {
   background: #999;
-} 
+}

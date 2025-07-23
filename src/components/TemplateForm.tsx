@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import FieldRenderer from "./FieldRenderer";
-import FieldBuilder from "./FieldBuilder";
-import { useTheme } from "./ThemeContext";
-import { getTemplateFields } from "../utils/templateUtils";
+import FieldRenderer from "./FieldRenderer"; // For rendering form fields
+import FieldBuilder from "./FieldBuilder"; // For editing form fields in edit mode
+import { useTheme } from "./ThemeContext"; // Custom hook for theme toggling
+import { getTemplateFields } from "../utils/templateUtils"; // Utility to load template fields
 import type { Field, FieldConfig, FieldOption } from "../types/types";
-import FAB from "./FAB";
+import FAB from "./FAB"; // Floating action button for adding new fields
 
+// Drag-and-drop support
 import {
   DragDropContext,
   Droppable,
@@ -15,24 +16,24 @@ import {
 } from "@hello-pangea/dnd";
 
 const TemplateForm: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>(); // Extract template ID from URL
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme(); // Theme context
 
+  // Component state
   const [fields, setFields] = useState<Field[]>([]);
   const [formTitle, setFormTitle] = useState("Template Form");
-  const [submittedData, setSubmittedData] = useState<
-    Record<string, string | string[] | Record<string, any>>
-  >({});
+  const [submittedData, setSubmittedData] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [showAlert, setShowAlert] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [templateSaved, setTemplateSaved] = useState(false);
 
+  // Load template fields when `id` changes
   useEffect(() => {
     if (id) {
       const loadedFields = getTemplateFields(id)
-        .filter((field: any) => field.type !== "section")
+        .filter((field: any) => field.type !== "section") // Exclude section-only fields
         .map(
           (field: any): Field => ({
             ...field,
@@ -42,6 +43,7 @@ const TemplateForm: React.FC = () => {
             ) as FieldOption[],
           })
         );
+
       setFields(loadedFields);
       setFormTitle(
         loadedFields.find((f) => f.type === "header")?.label || "Template Form"
@@ -49,17 +51,17 @@ const TemplateForm: React.FC = () => {
     }
   }, [id]);
 
-  const handleInputChange = (
-    fieldId: string,
-    value: string | string[] | Record<string, any>
-  ) => {
+  // Handle user input
+  const handleInputChange = (fieldId: string, value: any) => {
     setSubmittedData((prev) => ({ ...prev, [fieldId]: value }));
     setErrors((prev) => ({ ...prev, [fieldId]: false }));
   };
 
+  // Handle form submission
   const handleSubmit = () => {
     const newErrors: Record<string, boolean> = {};
 
+    // Validate required fields
     fields.forEach((field) => {
       if (field.required) {
         const val = submittedData[field.id];
@@ -76,9 +78,9 @@ const TemplateForm: React.FC = () => {
     });
 
     setErrors(newErrors);
-
     if (Object.keys(newErrors).length > 0) return;
 
+    // Format data for saving
     const submissionFields = fields.map((f) => ({
       id: f.id,
       label: f.label || `Field ${f.id}`,
@@ -93,6 +95,7 @@ const TemplateForm: React.FC = () => {
       isDeleted: false,
     };
 
+    // Save to local storage
     const existingForms = JSON.parse(
       localStorage.getItem("recentForms") || "[]"
     );
@@ -101,23 +104,26 @@ const TemplateForm: React.FC = () => {
       JSON.stringify([formSubmission, ...existingForms])
     );
 
+    // Show confirmation alert and redirect
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 2000);
     navigate(`/view/${formSubmission.id}`);
   };
 
+  // Add a new field to the form
   const addField = (type: Field["type"]) => {
     const id = Date.now().toString();
 
     let newField: Field;
 
+    // Special handling for row layout fields
     if (type === "rowLayout") {
       newField = {
         id,
         type: "rowLayout",
         label: "Row Layout",
         required: false,
-        layout: ["1/2", "1/2"], // default 2-column layout
+        layout: ["1/2", "1/2"],
         columns: [{ fields: [] }, { fields: [] }],
       };
     } else {
@@ -138,6 +144,7 @@ const TemplateForm: React.FC = () => {
     setFields((prev) => [...prev, newField]);
   };
 
+  // Update a field in the form
   const updateField = (updatedField: FieldConfig) => {
     setFields((prev) =>
       prev.map((f) =>
@@ -155,10 +162,12 @@ const TemplateForm: React.FC = () => {
     );
   };
 
+  // Delete a field
   const deleteField = (id: string) => {
     setFields((prev) => prev.filter((f) => f.id !== id));
   };
 
+  // Save current template as new
   const handleSaveAsNewTemplate = () => {
     if (fields.length === 0) {
       alert("Cannot save an empty template.");
@@ -184,6 +193,7 @@ const TemplateForm: React.FC = () => {
     }
   };
 
+  // Handle drag-and-drop rearranging
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
     const updated = [...fields];
@@ -191,6 +201,7 @@ const TemplateForm: React.FC = () => {
     updated.splice(result.destination.index, 0, movedItem);
     setFields(updated);
   };
+
   return (
     <div
       className={`py-10 min-h-screen ${
@@ -201,7 +212,7 @@ const TemplateForm: React.FC = () => {
     >
       <div className="flex justify-center">
         <div className="w-full max-w-5xl px-4">
-          {/* Top Button Panel */}
+          {/* Top buttons: Edit mode, Theme switch, Back */}
           <div className="flex justify-end mb-6">
             <div className="flex flex-wrap gap-3 p-3 rounded">
               <button
@@ -237,8 +248,9 @@ const TemplateForm: React.FC = () => {
             </div>
           </div>
 
-          {/* Form Area */}
+          {/* Main Form Area */}
           {editMode ? (
+            // Field drag-n-drop builder UI
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="fields-droppable">
                 {(provided) => (
@@ -274,6 +286,7 @@ const TemplateForm: React.FC = () => {
               </Droppable>
             </DragDropContext>
           ) : fields.length === 0 ? (
+            // No fields fallback
             <div
               className={` px-4 py-3 rounded mb-4 ${
                 theme === "dark"
@@ -284,6 +297,7 @@ const TemplateForm: React.FC = () => {
               No fields available in this template.
             </div>
           ) : (
+            // Form submission UI
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -318,7 +332,7 @@ const TemplateForm: React.FC = () => {
             </form>
           )}
 
-          {/* Save Button */}
+          {/* Save Template Button */}
           {editMode && (
             <div className="mt-6">
               <button
@@ -330,7 +344,7 @@ const TemplateForm: React.FC = () => {
             </div>
           )}
 
-          {/* Alerts */}
+          {/* Feedback alerts */}
           {showAlert && (
             <div className="mt-6 bg-green-100 text-green-800 px-4 py-3 rounded">
               Form submitted and saved!
@@ -344,7 +358,7 @@ const TemplateForm: React.FC = () => {
         </div>
       </div>
 
-      {/* Floating Action Button (FAB) */}
+      {/* Floating action button for adding fields */}
       {editMode && <FAB onAddField={addField} mode="add" />}
     </div>
   );
