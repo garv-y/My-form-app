@@ -23,6 +23,7 @@ const fieldTypes: Field["type"][] = [
   "multipleChoice",
   "tags",
   "rowLayout",
+  "section",
 ];
 
 // Main FAB component
@@ -51,7 +52,7 @@ const FAB: React.FC<FABProps> = ({ mode, onAddField, onClick }) => {
       {/* If menu is open, show the field list */}
       {open && (
         <div
-          className={`absolute bottom-3 right-0 min-w-[220px] max-h-[92vh] p-3 rounded-lg shadow-lg transition-all duration-200 transform scale-100 ${
+          className={`absolute bottom-3 right-0 min-w-[220px] max-h-[92vh] p-3 rounded-lg shadow-lg transition-all duration-200 transform scale-100 overflow-auto ${
             theme === "dark"
               ? "bg-gray-800 text-white"
               : "bg-white text-gray-800"
@@ -72,7 +73,11 @@ const FAB: React.FC<FABProps> = ({ mode, onAddField, onClick }) => {
           {fieldTypes.map((type) => (
             <button
               key={type}
-              className="w-full h-10 mb-2 px-3 py-2 text-left text-sm border border-blue-500 rounded hover:bg-blue-50 dark:hover:bg-gray-700"
+              className={`w-full h-10 mb-2 px-3 py-2 text-left text-sm border${
+                theme === "light"
+                  ? " rounded text-blue-500 hover:bg-blue-500 hover:text-white"
+                  : " rounded text-white hover:bg-gray-700 hover:text-white"
+              }`}
               onClick={() => {
                 onAddField?.(type); // Notify parent to add selected field
                 setOpen(false); // Close popup after selection

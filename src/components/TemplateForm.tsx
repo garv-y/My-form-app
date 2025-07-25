@@ -32,17 +32,15 @@ const TemplateForm: React.FC = () => {
   // Load template fields when `id` changes
   useEffect(() => {
     if (id) {
-      const loadedFields = getTemplateFields(id)
-        .filter((field: any) => field.type !== "section") // Exclude section-only fields
-        .map(
-          (field: any): Field => ({
-            ...field,
-            id: String(field.id),
-            options: field.options?.map((opt: any) =>
-              typeof opt === "string" ? { label: opt, value: opt } : opt
-            ) as FieldOption[],
-          })
-        );
+      const loadedFields = getTemplateFields(id).map(
+        (field: any): Field => ({
+          ...field,
+          id: String(field.id),
+          options: field.options?.map((opt: any) =>
+            typeof opt === "string" ? { label: opt, value: opt } : opt
+          ) as FieldOption[],
+        })
+      );
 
       setFields(loadedFields);
       setFormTitle(
@@ -306,18 +304,37 @@ const TemplateForm: React.FC = () => {
               className="space-y-6"
             >
               {fields.map((field) => {
-                const value = submittedData[field.id];
-                const safeValue =
-                  typeof value === "string" || Array.isArray(value)
-                    ? value
-                    : "";
+                const isSection = field.type === "section";
+                const safeValue = isSection
+                  ? submittedData[field.id] ?? {}
+                  : submittedData[field.id] ?? "";
 
                 return (
                   <FieldRenderer
                     key={field.id}
                     field={field}
                     value={safeValue}
-                    onChange={(val) => handleInputChange(field.id, val)}
+                    onChange={(
+                      val: string | string[] | Record<string, any>
+                    ) => {
+                      if (
+                        isSection &&
+                        typeof val === "object" &&
+                        !Array.isArray(val)
+                      ) {
+                        const currentValue = submittedData[field.id] ?? {};
+                        const newValue = {
+                          ...currentValue,
+                          ...val,
+                        };
+                        setSubmittedData((prev) => ({
+                          ...prev,
+                          [field.id]: newValue,
+                        }));
+                      } else {
+                        handleInputChange(field.id, val);
+                      }
+                    }}
                     error={errors[field.id] || false}
                   />
                 );

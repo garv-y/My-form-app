@@ -35,6 +35,7 @@ const defaultHeightMap: Record<FieldType, number> = {
   multipleChoice: 11,
   date: 7,
   rowLayout: 18,
+  section: 35,
 };
 
 // Type definition for a layout item in react-grid-layout
@@ -131,12 +132,37 @@ const FormBuilder: React.FC = () => {
     setFields((prev) => [...prev, newField]);
     setLayout((prev) => [...prev, baseLayout]);
   };
+  const updateFieldRecursive = (
+    fields: FieldConfig[],
+    updated: FieldConfig
+  ): FieldConfig[] => {
+    return fields.map((f) => {
+      if (f.id === updated.id) return updated;
+
+      // 🔁 Handle nested Section
+      if (f.type === "section" && "rows" in f) {
+        return {
+          ...f,
+          rows: f.rows.map((row) => {
+            if (row.id === updated.id) return updated;
+            return {
+              ...row,
+              columns: row.columns.map((col) => ({
+                ...col,
+                fields: updateFieldRecursive(col.fields, updated),
+              })),
+            };
+          }),
+        };
+      }
+
+      return f;
+    });
+  };
 
   // Update an individual field
   const updateField = (updatedField: FieldConfig) => {
-    setFields((prevFields) =>
-      prevFields.map((f) => (f.id === updatedField.id ? updatedField : f))
-    );
+    setFields((prevFields) => updateFieldRecursive(prevFields, updatedField));
   };
 
   // Remove a field by its ID
@@ -246,7 +272,7 @@ const FormBuilder: React.FC = () => {
       title: formTitle,
       timestamp: new Date().toISOString(),
       responses: result,
-      fields,
+      fields: JSON.parse(JSON.stringify(fields)), // 🔁 ensures deep copy of nested fields
     };
 
     const existing = JSON.parse(localStorage.getItem("recentForms") || "[]");
@@ -322,6 +348,7 @@ const FormBuilder: React.FC = () => {
                     "linebreak",
                     "date",
                     "rowLayout",
+                    "section",
                   ].map((type) => (
                     <button
                       key={type}

@@ -12,7 +12,8 @@ export type FieldType =
   | "multipleChoice"   // Single selection (radio buttons)
   | "tags"             // Tag input (select or create multiple values)
   | "date"             // Date picker
-  | "rowLayout";       // Custom layout that holds multiple columns and fields
+  | "rowLayout"        // Custom layout that holds multiple columns and fields
+  | "section";         // A container that can only hold rowLayout fields
 
 // Represents a single option in dropdowns, checkboxes, or multipleChoice fields
 export interface FieldOption {
@@ -35,18 +36,20 @@ export interface FieldBase {
   id: string;                     // Unique identifier
   type: FieldType;                // Type of field (from FieldType)
   label?: string;                 // Display label
+  title?: string;
   required?: boolean;             // Whether field is required
   displayOnShortForm?: boolean;  // If this should show in short/preview form
-  x?: number;                    // Optional X coord in grid
-  y?: number;                    // Optional Y coord in grid
-  w?: number;                    // Optional width in grid
-  h?: number;                    // Optional height in grid
-  options?: FieldOption[];       // Used only in fields with selectable options
+  x?: number;                     // Optional X coord in grid
+  y?: number;                     // Optional Y coord in grid
+  w?: number;                     // Optional width in grid
+  h?: number;                     // Optional height in grid
+  options?: FieldOption[];        // Used only in fields with selectable options
 }
 
 // Special structure for fields of type 'rowLayout'
 // These contain multiple columns with their own nested fields
 export interface RowLayoutField extends FieldBase {
+  id: string;                   // Unique identifier
   type: "rowLayout";             // Force type to be 'rowLayout'
   layout: string[];              // Column widths like ['1/2', '1/2']
   columns: {
@@ -55,8 +58,18 @@ export interface RowLayoutField extends FieldBase {
   }[];
 }
 
-// A field can be either a simple field (FieldBase) or a rowLayout field
-export type Field = RowLayoutField | FieldBase;
+// Special structure for fields of type 'section'
+// These contain multiple rowLayout fields
+export interface SectionField extends FieldBase {
+  id: string;                 // Unique identifier
+  label: string;              // Section label
+  type: "section";               // Force type to be 'section'
+  rows: RowLayoutField[];        // Only rowLayout fields allowed inside
+  fields?: Field[];           // Optional additional fields (not in rows)
+}
+
+// A field can be either a simple field, a rowLayout, or a section
+export type Field = FieldBase | RowLayoutField | SectionField;
 
 // Alias to be used during field configuration/editing
 export type FieldConfig = Field;

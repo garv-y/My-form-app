@@ -1,5 +1,5 @@
 import React from "react";
-import type { FieldConfig, RowLayoutField } from "../types/types";
+import type { FieldConfig, RowLayoutField, SectionField } from "../types/types";
 import { useTheme } from "./ThemeContext";
 import RowLayoutRenderer from "./RowLayoutRenderer";
 
@@ -7,7 +7,12 @@ interface FieldRendererProps {
   field: FieldConfig;
   value?: string | string[] | Record<string, any>;
   onChange?: (value: string | string[] | Record<string, any>) => void;
-  error?: boolean | Record<string, boolean>;
+  error?:
+    | boolean
+    | Record<string, boolean>
+    | Record<string, Record<string, boolean>>;
+  updateField?: (updated: FieldConfig) => void;
+  deleteField?: (id: string) => void;
 }
 
 const Renderer: React.FC<FieldRendererProps> = ({
@@ -20,20 +25,23 @@ const Renderer: React.FC<FieldRendererProps> = ({
   const isDark = theme === "dark";
   const textColor = isDark ? "text-white" : "text-black";
 
-  // Renders a generic required field error
+  const label =
+    field?.label !== undefined && field?.label !== null
+      ? field.label
+      : field?.title ?? `Field ${field.id}`;
+
   const renderError = () =>
-    error && (
+    error &&
+    typeof error === "boolean" && (
       <small className="text-red-500 text-sm block mt-1">
         This field is required.
       </small>
     );
 
-  // Shared input styles
   const baseInputClass = `px-3 py-2 rounded border ${
     error ? "border-red-500" : "border-gray-300"
   } ${isDark ? "bg-gray-800 text-white" : "bg-white text-black"}`;
 
-  // Render by field type
   switch (field.type) {
     case "header":
       return (
@@ -44,7 +52,7 @@ const Renderer: React.FC<FieldRendererProps> = ({
             suppressContentEditableWarning
             onBlur={(e) => onChange?.(e.currentTarget.textContent || "")}
           >
-            {(typeof value === "string" && value) || field.label || "Header"}
+            {(typeof value === "string" && value) || label}
           </h4>
           {renderError()}
         </div>
@@ -59,7 +67,7 @@ const Renderer: React.FC<FieldRendererProps> = ({
             suppressContentEditableWarning
             onBlur={(e) => onChange?.(e.currentTarget.textContent || "")}
           >
-            {(typeof value === "string" && value) || field.label || "Label"}
+            {(typeof value === "string" && value) || label}
           </label>
           {renderError()}
         </div>
@@ -74,7 +82,7 @@ const Renderer: React.FC<FieldRendererProps> = ({
             suppressContentEditableWarning
             onBlur={(e) => onChange?.(e.currentTarget.textContent || "")}
           >
-            {(typeof value === "string" && value) || field.label || "Paragraph"}
+            {(typeof value === "string" && value) || label}
           </p>
           {renderError()}
         </div>
@@ -88,13 +96,12 @@ const Renderer: React.FC<FieldRendererProps> = ({
     case "date":
       return (
         <div className="mb-4">
-          <label className={`block mb-1 ${textColor}`}>{field.label}</label>
+          <label className={`block mb-1 ${textColor}`}>{label}</label>
           <input
             type={field.type}
             className={baseInputClass}
             value={typeof value === "string" ? value : ""}
             onChange={(e) => onChange?.(e.target.value)}
-            // Date fields limit max date to today
             max={
               field.type === "date"
                 ? new Date().toISOString().split("T")[0]
@@ -108,7 +115,7 @@ const Renderer: React.FC<FieldRendererProps> = ({
     case "dropdown":
       return (
         <div className="mb-4">
-          <label className={`block mb-1 ${textColor}`}>{field.label}</label>
+          <label className={`block mb-1 ${textColor}`}>{label}</label>
           <select
             className={baseInputClass}
             value={typeof value === "string" ? value : ""}
@@ -128,7 +135,7 @@ const Renderer: React.FC<FieldRendererProps> = ({
     case "checkboxes":
       return (
         <div className="mb-4 w-full text-left">
-          <label className={`block mb-2 ${textColor}`}>{field.label}</label>
+          <label className={`block mb-2 ${textColor}`}>{label}</label>
           <div className="flex flex-col gap-2 w-fit">
             {field.options?.map((opt, i) => {
               const val = opt.value ?? "";
@@ -164,7 +171,7 @@ const Renderer: React.FC<FieldRendererProps> = ({
     case "multipleChoice":
       return (
         <div className="mb-4 w-full text-left">
-          <label className={`block mb-2 ${textColor}`}>{field.label}</label>
+          <label className={`block mb-2 ${textColor}`}>{label}</label>
           <div className="flex flex-col gap-2 w-fit">
             {field.options?.map((opt, i) => {
               const val = opt.value ?? "";
@@ -193,7 +200,6 @@ const Renderer: React.FC<FieldRendererProps> = ({
       );
 
     case "tags":
-      // Normalize tags value from various sources
       const actualValue =
         value && typeof value === "object" && "value" in value
           ? value.value
@@ -202,7 +208,7 @@ const Renderer: React.FC<FieldRendererProps> = ({
       return (
         <div className="mb-4">
           <label className={`block mb-2 font-medium ${textColor}`}>
-            {field.label}
+            {label}
           </label>
           <div className="flex flex-wrap gap-2">
             {field.options?.map((opt, idx) => {
@@ -239,21 +245,59 @@ const Renderer: React.FC<FieldRendererProps> = ({
         </div>
       );
 
+    case "section": {
+      const sectionValue = (value as Record<string, any>) ?? {};
+      const sectionErrors =
+        typeof error === "object" && error !== null && !Array.isArray(error)
+          ? (error as Record<string, any>)
+          : {};
+
+      return (
+        <div
+          className="p-4 border rounded mb-4 bg-white dark:bg-dark-card-bg"
+          key={field.id}
+        >
+          <h3 className="font-semibold text-lg mb-2">{label}</h3>
+          {((field as SectionField).rows || []).map((row: RowLayoutField) => (
+            <RowLayoutRenderer
+              key={row.id}
+              field={row}
+              responses={sectionValue[row.id] || {}}
+              onChange={(colId, colVal) => {
+                onChange?.({
+                  ...sectionValue,
+                  [row.id]: {
+                    ...(sectionValue[row.id] || {}),
+                    [colId]: colVal,
+                  },
+                });
+              }}
+              errors={sectionErrors[row.id] || {}}
+            />
+          ))}
+        </div>
+      );
+    }
+
     case "rowLayout": {
-      const nestedValues = (value as Record<string, any>) ?? {};
-      const nestedErrors = (error as Record<string, boolean>) ?? {};
+      const rowResponses = (value as Record<string, any>) ?? {};
+      const rowErrors =
+        typeof error === "object" && error !== null && !Array.isArray(error)
+          ? (error as Record<string, any>)
+          : {};
 
       return (
         <RowLayoutRenderer
+          key={field.id}
           field={field as RowLayoutField}
-          responses={nestedValues}
-          onChange={(id: string, val: any) => {
+          responses={rowResponses}
+          onChange={(colId: string, colVal: any) => {
             onChange?.({
-              ...nestedValues,
-              [id]: val,
+              ...rowResponses,
+              [colId]: colVal,
             });
           }}
-          errors={nestedErrors}
+          errors={rowErrors}
         />
       );
     }
